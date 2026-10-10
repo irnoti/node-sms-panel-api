@@ -1,5 +1,7 @@
 # @irnoti/sdk
 
+[![npm](https://img.shields.io/npm/v/@irnoti/sdk.svg)](https://www.npmjs.com/package/@irnoti/sdk) [![tests](https://github.com/irnoti/node-sms-panel-api/actions/workflows/tests.yml/badge.svg)](https://github.com/irnoti/node-sms-panel-api/actions/workflows/tests.yml) [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
+
 Node.js / TypeScript SDK for the irnoti API. Zero dependencies, ESM, fully typed.
 
 ```bash
