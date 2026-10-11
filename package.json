@@ -40,7 +40,7 @@
   "homepage": "https://github.com/irnoti/node-sms-panel-api#readme",
   "devDependencies": {
     "@types/node": "^26.6.4",
-    "typescript": "^5.6.0"
+    "typescript": "^7.0.2"
   },
   "author": {
     "name": "irnoti",
