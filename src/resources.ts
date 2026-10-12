@@ -146,6 +146,32 @@ export class Bots {
   shopStats(botId: Id) { return this.t.request<Json>('GET', `/botbuilder/bots/${e(botId)}/shop/stats`); }
 }
 
+export interface BrokerUpdatesOptions { offset?: number; limit?: number; timeout?: number; allowedUpdates?: string[] }
+export interface BrokerWebhookOptions { url: string; secretToken?: string; allowedUpdates?: string[]; dropPendingUpdates?: boolean }
+
+/** Telegram broker: register a bot token, get a private relay link, call the Bot API and pull updates through it. */
+export class Broker {
+  constructor(private t: Transport) {}
+  /** Scope `broker.read`. */
+  list() { return this.t.request<Json[]>('GET', '/broker/bots'); }
+  get(id: Id) { return this.t.request<Json>('GET', `/broker/bots/${e(id)}`); }
+  /** Scope `broker.write`, account owner only. The token is never returned afterwards; the response carries the relay `link`. */
+  create(label: string, token: string) { return this.t.request<Json>('POST', '/broker/bots', { body: { label, token } }); }
+  async rename(id: Id, label: string) { await this.t.request('PATCH', `/broker/bots/${e(id)}`, { body: { label } }); }
+  /** Swap in a regenerated BotFather token. Clears the return webhook. */
+  replaceToken(id: Id, token: string) { return this.t.request<Json>('PUT', `/broker/bots/${e(id)}/token`, { body: { token } }); }
+  /** New relay link; the previous one stops working. */
+  rotate(id: Id) { return this.t.request<Json>('POST', `/broker/bots/${e(id)}/rotate`); }
+  async delete(id: Id) { await this.t.request('DELETE', `/broker/bots/${e(id)}`); }
+  /** Scope `broker.request`: call any Telegram Bot API method, e.g. `request(1, 'sendMessage', { chat_id, text })`. */
+  request(id: Id, method: string, params: Json = {}) { return this.t.request<{ status: number; response: unknown }>('POST', `/broker/bots/${e(id)}/request`, { body: { method, params } }); }
+  /** Scope `broker.request`: pull updates (long-poll `timeout` ≤ 25 s). */
+  updates(id: Id, o: BrokerUpdatesOptions = {}) { return this.t.request<{ status: number; response: unknown }>('POST', `/broker/bots/${e(id)}/updates`, { body: o }); }
+  webhook(id: Id) { return this.t.request<Json>('GET', `/broker/bots/${e(id)}/webhook`); }
+  setWebhook(id: Id, o: BrokerWebhookOptions) { return this.t.request<Json>('PUT', `/broker/bots/${e(id)}/webhook`, { body: o }); }
+  deleteWebhook(id: Id, dropPendingUpdates?: boolean) { return this.t.request<Json>('DELETE', `/broker/bots/${e(id)}/webhook`, { body: { dropPendingUpdates } }); }
+}
+
 export class Voip {
   constructor(private t: Transport) {}
   calls() { return this.t.request<Json[]>('GET', '/voip/calls'); }

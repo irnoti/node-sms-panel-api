@@ -32,6 +32,22 @@ test('query strings skip undefined values', async () => {
   assert.equal(calls[1].url, 'https://irnoti.test/v1/botbuilder/bots/5/shop/orders');
 });
 
+test('broker routes and bodies', async () => {
+  const { api, calls } = client(200, {});
+  await api.broker.request(7, 'sendMessage', { chat_id: 1, text: 'hi' });
+  await api.broker.updates(7, { limit: 10, allowedUpdates: ['message'] });
+  await api.broker.setWebhook(7, { url: 'https://example.com/hook', secretToken: 's' });
+  await api.broker.deleteWebhook(7, true);
+  await api.broker.replaceToken(7, '123456:ABCDEF-token');
+  assert.deepEqual(calls.map((c) => [c.method, c.url.replace('https://irnoti.test/v1', '')]), [
+    ['POST', '/broker/bots/7/request'], ['POST', '/broker/bots/7/updates'], ['PUT', '/broker/bots/7/webhook'],
+    ['DELETE', '/broker/bots/7/webhook'], ['PUT', '/broker/bots/7/token'],
+  ]);
+  assert.deepEqual(JSON.parse(String(calls[0].body)), { method: 'sendMessage', params: { chat_id: 1, text: 'hi' } });
+  assert.deepEqual(JSON.parse(String(calls[1].body)), { limit: 10, allowedUpdates: ['message'] });
+  assert.deepEqual(JSON.parse(String(calls[3].body)), { dropPendingUpdates: true });
+});
+
 test('errors carry status, code, details and helpers', async () => {
   const { api } = client(400, { statusCode: 400, code: 'invalid_recipients', details: ['0912'] });
   await assert.rejects(api.sms.send({ lineId: 1, to: '0912', text: 'x' }), (e: IrnotiApiError) => {

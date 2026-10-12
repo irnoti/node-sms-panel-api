@@ -1,5 +1,5 @@
 import { Transport, type ClientOptions } from './client.js';
-import { Batches, Bots, Lines, LinkTracker, Messages, NumberBanks, Phonebook, Services, Sms, Verify, Voip, Wallet } from './resources.js';
+import { Batches, Bots, Broker, Lines, LinkTracker, Messages, NumberBanks, Phonebook, Services, Sms, Verify, Voip, Wallet } from './resources.js';
 
 export class Irnoti {
   readonly sms: Sms;
@@ -13,6 +13,7 @@ export class Irnoti {
   readonly numberBanks: NumberBanks;
   readonly verify: Verify;
   readonly bots: Bots;
+  readonly broker: Broker;
   readonly voip: Voip;
 
   constructor(private readonly options: ClientOptions) {
@@ -28,6 +29,7 @@ export class Irnoti {
     this.numberBanks = new NumberBanks(t);
     this.verify = new Verify(t);
     this.bots = new Bots(t);
+    this.broker = new Broker(t);
     this.voip = new Voip(t);
   }
 
@@ -38,4 +40,5 @@ export class Irnoti {
 export { IrnotiApiError } from './errors.js';
 export { verifyWebhook, parseWebhook } from './webhook.js';
 export type { ClientOptions } from './client.js';
+export type { BrokerUpdatesOptions, BrokerWebhookOptions } from './resources.js';
 export * from './types.js';
