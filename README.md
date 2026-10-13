@@ -34,6 +34,44 @@ app.post('/irnoti/webhook', express.raw({ type: 'application/json' }), (req, res
 
 Multi-tenant: `irnoti.withApiKey(customerKey)` returns an independent client.
 
+## Quickstart
+
+New here? Follow **[QUICKSTART.md](QUICKSTART.md)**: install, get a key, send your first (free, sandbox) SMS in 5 minutes.
+
+## What can this SDK do? (function reference)
+
+Everything hangs off one client. Each row below is a *resource*, and links to its section in the API docs at [irnoti.com/docs](https://irnoti.com/docs) (open the docs panel and look for the section named in the "Docs section" column).
+
+| Resource | Docs section | What it is for | Functions |
+|---|---|---|---|
+| `irnoti.sms` | SMS | Send text messages | `send` (single / bulk / group / scheduled / gradual), `quote` (exact price, no send), `pattern` (approved OTP/transactional template), `sos` (guaranteed delivery with failover) |
+| `irnoti.messages` | SMS → Messages | Look up sent messages | `list`, `get`, `check` |
+| `irnoti.batches` | SMS → Batches | Control scheduled/gradual sends | `scheduled`, `cancel`, `pause`, `resume` |
+| `irnoti.lines` | SMS → Lines | Your sender numbers (you need a line id to send) | `list` |
+| `irnoti.wallet` | Wallet | Balance and history | `balance`, `transactions` |
+| `irnoti.phonebook` | Phonebook | Contact groups and contacts | `groups`, `createGroup`, `deleteGroup`, `contacts`, `addContacts`, `importCsv`, `updateContact`, `deleteContact` |
+| `irnoti.services` | Services | Provider products: `regional`, `targeted`, `peyamap`, `smart`, `messenger`, `voice`, `international` | `prices`, `internationalRates`, `list`, `quote`, `create`, `get`, `refresh`, `cancel` |
+| `irnoti.linkTracker` | Link tracker | SMS with tracked links, A/B variants, holdout | `send`, `holdouts`, `sendNow`, `campaigns`, `campaign` |
+| `irnoti.numberBanks` | Number banks | Send to purchased/filtered number banks | `list`, `facets`, `quote`, `send` |
+| `irnoti.verify` | Verify | OTP verification sessions (SMS or bot) | `info`, `create`, `list`, `get`, `cancel`, `stats` |
+| `irnoti.bots` | Bot builder | Read bots, send messages/OTP through them (creating bots is panel-only) | `info`, `list`, `get`, `stats`, `subscribers`, `messages`, `send`, `otp`, `shopOrders`, `shopStats` |
+| `irnoti.broker` | Telegram broker | Run Telegram bots through a private relay | `list`, `get`, `create`, `rename`, `replaceToken`, `rotate`, `delete`, `request`, `updates`, `webhook`, `setWebhook`, `deleteWebhook` |
+| `irnoti.voip` | VoIP | Click-to-call | `calls`, `price`, `call` |
+
+Top-level helpers:
+
+| Function | What it does |
+|---|---|
+| `new Irnoti({ apiKey, baseUrl?, timeoutMs?, retries?, fetch? })` | Create the client |
+| `irnoti.withApiKey(key)` | New independent client for another customer key (multi-tenant) |
+| `verifyWebhook(rawBody, signature, secret)` | `true`/`false`: is this webhook really from irnoti? |
+| `parseWebhook(rawBody, signature, secret)` | Verify and return the decoded event; fails if the signature is bad |
+| `IrnotiApiError` | Raised/returned on any non-2xx answer; has `.status`, `.code`, `.details` and helpers like `.isInsufficientBalance` |
+
+Every function is a thin wrapper over one HTTP endpoint and returns the API's JSON. Types ship with the package, so your editor shows every argument (Ctrl/⌘-click a function to see its signature).
+
+> Typical flow: `lines.list()` → `sms.quote()` → `sms.send()` (with `idempotencyKey`) → `messages.get()` / webhook. Use an `irn_test_…` key and line id `sandbox` while experimenting: nothing is sent or charged.
+
 ### Telegram broker
 
 ```ts
