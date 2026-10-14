@@ -24,6 +24,12 @@ test('send builds the request and returns the body', async () => {
   assert.deepEqual(JSON.parse(String(c.body)), { lineId: '1', to: ['0912'], groupIds: ['12'], text: 'hi', scheduledAt: '2026-10-20T09:00:00.000Z' });
 });
 
+test('send omits lineId when it is not given', async () => {
+  const { api, calls } = client(201, { batchId: '1', count: 1, totalPrice: '980', replayed: false });
+  await api.sms.send({ to: '0912', text: 'hi' });
+  assert.deepEqual(JSON.parse(String(calls[0].body)), { to: '0912', text: 'hi' });
+});
+
 test('query strings skip undefined values', async () => {
   const { api, calls } = client(200, []);
   await api.messages.list({ take: 2, before: 90 });

@@ -18,7 +18,8 @@ export interface ContactInput {
 export interface AddContactsResult { added: number; duplicates: number; invalid: number }
 
 export interface SendOptions {
-  lineId: Id | 'sandbox';
+  /** Optional. Omit to let the server choose the sender line; `'sandbox'` with an `irn_test_` key sends nothing. */
+  lineId?: Id | 'sandbox';
   text: string;
   to?: string | string[];
   groupIds?: Id[];
