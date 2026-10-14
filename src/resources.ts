@@ -6,20 +6,21 @@ const e = (id: Id) => encodeURIComponent(String(id));
 const idem = (key?: string) => (key ? { 'Idempotency-Key': key } : undefined);
 const iso = (d?: Date | string) => (d instanceof Date ? d.toISOString() : d);
 const ids = (g?: Id[]) => g?.map(String);
+const line = (l?: Id) => (l === undefined || l === null || l === '' ? undefined : String(l));
 const page = (take?: number, before?: Id) => ({ take, before: before === undefined ? undefined : String(before) });
 
 export class Sms {
   constructor(private t: Transport) {}
-  /** Scope `sms.send`. Use `lineId: 'sandbox'` with an `irn_test_` key to try for free. */
+  /** Scope `sms.send`. `lineId` is optional (omit it to let the server pick your default line). Use `lineId: 'sandbox'` with an `irn_test_` key to try for free. */
   send(o: SendOptions) {
     return this.t.request<BatchResult>('POST', '/sms/send', {
       headers: idem(o.idempotencyKey),
-      body: { lineId: String(o.lineId), to: o.to, groupIds: ids(o.groupIds), text: o.text, scheduledAt: iso(o.scheduledAt), gradual: o.gradual },
+      body: { lineId: line(o.lineId), to: o.to, groupIds: ids(o.groupIds), text: o.text, scheduledAt: iso(o.scheduledAt), gradual: o.gradual },
     });
   }
   /** Scope `sms.read`: exact cost without sending. */
   quote(o: Omit<SendOptions, 'idempotencyKey' | 'scheduledAt' | 'gradual'>) {
-    return this.t.request<Quote>('POST', '/sms/quote', { body: { lineId: String(o.lineId), to: o.to, groupIds: ids(o.groupIds), text: o.text } });
+    return this.t.request<Quote>('POST', '/sms/quote', { body: { lineId: line(o.lineId), to: o.to, groupIds: ids(o.groupIds), text: o.text } });
   }
   /** Approved template (pattern). Scope `sms.send`. */
   pattern(code: string, to: string, params: Record<string, string | number> = {}, idempotencyKey?: string) {
@@ -96,8 +97,8 @@ export class Services {
 
 export class LinkTracker {
   constructor(private t: Transport) {}
-  send(o: { lineId: Id; text: string; url: string; to?: string[]; groupIds?: Id[]; variants?: string[]; holdoutPercent?: number; decideAfterMinutes?: number }) {
-    return this.t.request<Json>('POST', '/link-tracker/send', { body: { ...o, lineId: String(o.lineId), groupIds: ids(o.groupIds) } });
+  send(o: { lineId?: Id; text: string; url: string; to?: string[]; groupIds?: Id[]; variants?: string[]; holdoutPercent?: number; decideAfterMinutes?: number }) {
+    return this.t.request<Json>('POST', '/link-tracker/send', { body: { ...o, lineId: line(o.lineId), groupIds: ids(o.groupIds) } });
   }
   holdouts() { return this.t.request<Json[]>('GET', '/link-tracker/holdouts'); }
   sendNow(holdoutId: Id) { return this.t.request<Json>('POST', `/link-tracker/holdouts/${e(holdoutId)}/send-now`); }
@@ -105,14 +106,14 @@ export class LinkTracker {
   campaign(batchId: Id) { return this.t.request<Json>('GET', `/link-tracker/campaigns/${e(batchId)}`); }
 }
 
-export interface BankSend { bankId: Id; count: number; lineId: Id; text: string; filters?: { operator?: string; province?: string; city?: string; tag?: string } }
+export interface BankSend { bankId: Id; count: number; lineId?: Id; text: string; filters?: { operator?: string; province?: string; city?: string; tag?: string } }
 export class NumberBanks {
   constructor(private t: Transport) {}
   list() { return this.t.request<Json[]>('GET', '/number-banks'); }
   facets(bankId: Id) { return this.t.request<Json>('GET', `/number-banks/${e(bankId)}/facets`); }
   quote(o: BankSend) { return this.t.request<Json>('POST', '/number-banks/quote', { body: this.body(o) }); }
   send(o: BankSend, idempotencyKey?: string) { return this.t.request<Json>('POST', '/number-banks/send', { body: this.body(o), headers: idem(idempotencyKey) }); }
-  private body(o: BankSend) { return { bankId: String(o.bankId), count: o.count, lineId: String(o.lineId), text: o.text, filters: o.filters ?? {} }; }
+  private body(o: BankSend) { return { bankId: String(o.bankId), count: o.count, lineId: line(o.lineId), text: o.text, filters: o.filters ?? {} }; }
 }
 
 export class Verify {
@@ -120,7 +121,7 @@ export class Verify {
   info() { return this.t.request<{ price: string }>('GET', '/verify/info'); }
   /** Provide exactly one of `to` (mobile) or `bot` ({id, ref}). */
   create(o: { to?: string; bot?: { id: Id; ref: string }; lineId?: Id | 'sandbox'; mode?: string; length?: number; ttlSec?: number; maxAttempts?: number; redirectUrl?: string; callbackUrl?: string; clientRef?: string; brandName?: string; brandColor?: string }) {
-    return this.t.request<Json>('POST', '/verify/sessions', { body: { ...o, lineId: o.lineId === undefined ? undefined : String(o.lineId), bot: o.bot && { id: String(o.bot.id), ref: o.bot.ref } } });
+    return this.t.request<Json>('POST', '/verify/sessions', { body: { ...o, lineId: line(o.lineId), bot: o.bot && { id: String(o.bot.id), ref: o.bot.ref } } });
   }
   list(o: { take?: number; before?: Id } = {}) { return this.t.request<Json[]>('GET', '/verify/sessions', { query: page(o.take, o.before) }); }
   get(id: Id) { return this.t.request<Json>('GET', `/verify/sessions/${e(id)}`); }
